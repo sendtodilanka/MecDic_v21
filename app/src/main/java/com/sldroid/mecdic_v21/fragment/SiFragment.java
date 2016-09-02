@@ -15,11 +15,9 @@ import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
-
 import com.sldroid.mecdic_v21.R;
 import com.sldroid.mecdic_v21.dbms.TestAdapter;
 import com.sldroid.mecdic_v21.extra.Word;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -71,10 +69,7 @@ public class SiFragment extends Fragment {
     }
 
     public void textSearch(String inputTxt){
-        ArrayList<Word> wordList = filter(words,inputTxt);
-        wordAdapter = new WordAdapter(getContext(), wordList);
-        listView.setAdapter(wordAdapter);
-        wordAdapter.notifyDataSetChanged();
+        new SearchTask().execute(inputTxt);
     }
 
     public void resetSearch(){
@@ -83,17 +78,29 @@ public class SiFragment extends Fragment {
         wordAdapter.notifyDataSetChanged();
     }
 
-    public ArrayList<Word> filter(List<Word> wordList, String query) {
-        query = query.toLowerCase();
+    public class SearchTask extends AsyncTask<String, Void, ArrayList<Word>>{
 
-        final ArrayList<Word> filteredWordList = new ArrayList<>();
-        for (Word word : wordList) {
-            final String text = word.getWord().toLowerCase();
-            if (text.contains(query)) {
-                filteredWordList.add(word);
+        @Override
+        protected ArrayList<Word> doInBackground(String... params) {
+            String query = params[0].toLowerCase();
+
+            final ArrayList<Word> filteredWordList = new ArrayList<>();
+            for (Word word : words) {
+                final String text = word.getWord().toLowerCase();
+                if (text.contains(query)) {
+                    filteredWordList.add(word);
+                }
             }
+            return filteredWordList;
         }
-        return filteredWordList;
+
+        @Override
+        protected void onPostExecute(ArrayList<Word> word_List) {
+            super.onPostExecute(words);
+            wordAdapter = new WordAdapter(getContext(), word_List);
+            listView.setAdapter(wordAdapter);
+            wordAdapter.notifyDataSetChanged();
+        }
     }
 
     public class WordAdapter extends ArrayAdapter<Word> implements SectionIndexer {
@@ -110,7 +117,7 @@ public class SiFragment extends Fragment {
         public WordAdapter(Context context, ArrayList<Word> words) {
             super(context, R.layout.si_word_row, words);
 
-            alphaIndexer = new HashMap<String, Integer>();
+            alphaIndexer = new HashMap<>();
             for (int i = 0; i < words.size(); i++)
             {
                 String s = words.get(i).getWord().substring(0, 1).toUpperCase();
@@ -119,7 +126,7 @@ public class SiFragment extends Fragment {
             }
 
             Set<String> sectionLetters = alphaIndexer.keySet();
-            ArrayList<String> sectionList = new ArrayList<String>(sectionLetters);
+            ArrayList<String> sectionList = new ArrayList<>(sectionLetters);
             Collections.sort(sectionList);
             sections = new String[sectionList.size()];
             for (int i = 0; i < sectionList.size(); i++)
