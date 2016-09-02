@@ -9,8 +9,15 @@
         android:id="@+id/listView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:paddingTop="10dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="50dp"
         android:divider="@android:color/transparent"
-        android:listSelector="@android:color/transparent"/>
+        android:dividerHeight="10dp"
+        android:listSelector="@android:color/transparent"
+        android:smoothScrollbar="true"
+        android:fastScrollAlwaysVisible="true"/>
 
     <Button
         android:layout_width="match_parent"

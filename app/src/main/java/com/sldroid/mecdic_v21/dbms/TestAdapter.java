@@ -7,7 +7,10 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 
+import com.sldroid.mecdic_v21.extra.Word;
+
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class TestAdapter
 {
@@ -89,6 +92,28 @@ public class TestAdapter
             mCursor.moveToFirst();
         }
         return mCursor;
+    }
+
+    public ArrayList<Word> getAllWordToArray(String table) {
+        ArrayList<Word> wordList = new ArrayList<Word>();
+        String[] fields = new String[]{"_id","word","definition","favourite","usage"};
+
+        Cursor mCursor = mDb.query(table, fields, null, null, null,null, " word COLLATE NOCASE");
+
+        // looping through all rows and adding to list
+        if (mCursor.moveToFirst()) {
+            do {
+                Word word = new Word();
+                word.set_id(mCursor.getString(mCursor.getColumnIndex("_id")));
+                word.setWord(mCursor.getString(mCursor.getColumnIndex("word")));
+                word.setDefinition(mCursor.getString(mCursor.getColumnIndex("definition")));
+                word.setFavourite(mCursor.getString(mCursor.getColumnIndex("favourite")));
+                word.setUsage(mCursor.getString(mCursor.getColumnIndex("usage")));
+                wordList.add(word);
+            } while (mCursor.moveToNext());
+        }
+
+        return wordList;
     }
 
     public void favUpdate(String table, String id, int num){
