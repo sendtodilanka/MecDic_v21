@@ -220,17 +220,14 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         {
             EnFragment engFragment = (EnFragment)mViewPager.getAdapter()
                     .instantiateItem(mViewPager, mViewPager.getCurrentItem());
-            engFragment.textSearch(newText);
+            engFragment.textSearch(newText.replace(" ",""));
             //editor.putString("enSearch", newText).apply();
         }
         else if(mViewPager.getCurrentItem() == 1) //First fragment
         {
-            /*
             SiFragment sinFragment = (SiFragment) mViewPager.getAdapter()
                     .instantiateItem(mViewPager, mViewPager.getCurrentItem());
             sinFragment.textSearch(newText.replace(" ",""));
-            editor.putString("siSearch", newText).apply();
-            */
         }
         return false;
     }

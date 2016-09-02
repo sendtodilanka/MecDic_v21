@@ -9,23 +9,18 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CursorAdapter;
-import android.widget.FilterQueryProvider;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.sldroid.mecdic_v21.R;
 import com.sldroid.mecdic_v21.dbms.TestAdapter;
 import com.sldroid.mecdic_v21.extra.Word;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -69,18 +64,11 @@ public class EnFragment extends Fragment {
         listView = (ListView) view.findViewById(R.id.listView);
         listView.setEmptyView(btnSubmitEng);
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Cursor cursor = (Cursor) listView.getItemAtPosition(position);
-                final String word = cursor.getString(cursor.getColumnIndexOrThrow("word"));
-                Toast.makeText(getContext(), word, Toast.LENGTH_SHORT).show();
-            }
-        });
-
         words = dbHelper.getAllWordToArray("enDic");
         wordAdapter = new WordAdapter(getContext(),words);
         listView.setAdapter(wordAdapter);
+
+        //new GetAllWords().execute();
     }
 
     public void textSearch(String inputTxt){
@@ -182,7 +170,7 @@ public class EnFragment extends Fragment {
                         viewHolder.imgFav.setImageResource(R.drawable.fav_on);
                         dbHelper.favUpdate("enDic", user.get_id(),1);
                     }
-                    //new GetAllWords().execute();
+                    new GetAllWords().execute();
                 }
             });
 
@@ -192,7 +180,12 @@ public class EnFragment extends Fragment {
 
         public int getPositionForSection(int section)
         {
-            return alphaIndexer.get(sections[section]);
+            try {
+                return alphaIndexer.get(sections[section]);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            return section;
         }
 
         public int getSectionForPosition(int position)
@@ -221,6 +214,7 @@ public class EnFragment extends Fragment {
         @Override
         protected void onPostExecute(ArrayList<Word> result) {
             super.onPostExecute(result);
+            words = result;
             wordAdapter =  new WordAdapter(getContext(), result);
             listView.setAdapter(wordAdapter);
         }
