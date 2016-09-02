@@ -57,6 +57,8 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     private Drawer result;
     private static SharedPreferences sPrefer;
     private static SharedPreferences.Editor editor;
+    private MenuItem searchItem;
+    private SearchView searchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,10 +68,13 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        getSupportActionBar().setTitle("");
+        getSupportActionBar().setTitle("Dictionary");
 
         sPrefer = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         editor = sPrefer.edit();
+
+        editor.putString("siSearch", "").apply();
+        editor.putString("enSearch", "").apply();
 
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
@@ -80,6 +85,30 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
         mViewPager.setAdapter(dicPagerAdapter);
+
+        mViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            @Override
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
+
+            }
+
+            @Override
+            public void onPageSelected(int position) {
+                if (position  == 0){
+                    String query = sPrefer.getString("enSearch", "");
+                    searchView.setQuery(query, false);
+                }
+                else{
+                    String query = sPrefer.getString("siSearch", "");
+                    searchView.setQuery(query, false);
+                }
+            }
+
+            @Override
+            public void onPageScrollStateChanged(int state) {
+
+            }
+        });
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
@@ -92,12 +121,10 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
                 .withDrawerWidthDp(265)
                 .addDrawerItems(
                         new PrimaryDrawerItem()
-                                .withName("Home")
+                                .withName("Dictionary")
                                 .withIconColor(Color.parseColor("#F06292"))
-                                .withIcon(FontAwesome.Icon.faw_home)
-                                .withIdentifier(1)
-                                .withBadge(String.valueOf(sPrefer.getInt("notify",0)))
-                                .withBadgeStyle(new BadgeStyle(Color.parseColor("#2980b9"),Color.parseColor("#2980b9"))),
+                                .withIcon(FontAwesome.Icon.faw_book)
+                                .withIdentifier(1),
                         new PrimaryDrawerItem()
                                 .withName("History")
                                 .withIconColor(Color.parseColor("#BA68C8"))
@@ -195,8 +222,8 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
                 .setIcon(new IconicsDrawable(this, FontAwesome.Icon.faw_search)
                         .color(Color.WHITE).actionBar().paddingDp(3));
 
-        MenuItem searchItem = menu.findItem(R.id.search);
-        SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        searchItem = menu.findItem(R.id.search);
+        searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
         searchView.setOnQueryTextListener(this);
 
         return true;
@@ -221,14 +248,28 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             EnFragment engFragment = (EnFragment)mViewPager.getAdapter()
                     .instantiateItem(mViewPager, mViewPager.getCurrentItem());
             engFragment.textSearch(newText.replace(" ",""));
-            //editor.putString("enSearch", newText).apply();
+            editor.putString("enSearch", newText.replace(" ","")).apply();
         }
         else if(mViewPager.getCurrentItem() == 1) //First fragment
         {
             SiFragment sinFragment = (SiFragment) mViewPager.getAdapter()
                     .instantiateItem(mViewPager, mViewPager.getCurrentItem());
             sinFragment.textSearch(newText.replace(" ",""));
+            editor.putString("siSearch", newText.replace(" ","")).apply();
         }
         return false;
+    }
+
+    public void callMainActivity(Boolean val){
+        if (val){
+            SiFragment sinFragment = (SiFragment) mViewPager.getAdapter()
+                    .instantiateItem(mViewPager, mViewPager.getCurrentItem());
+            sinFragment.update();
+        }
+        else {
+            EnFragment engFragment = (EnFragment)mViewPager.getAdapter()
+                    .instantiateItem(mViewPager, mViewPager.getCurrentItem());
+            engFragment.update();
+        }
     }
 }

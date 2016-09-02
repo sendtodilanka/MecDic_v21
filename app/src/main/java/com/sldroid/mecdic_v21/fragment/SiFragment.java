@@ -1,6 +1,7 @@
 package com.sldroid.mecdic_v21.fragment;
 
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -17,6 +18,7 @@ import android.widget.ListView;
 import android.widget.SectionIndexer;
 import android.widget.TextView;
 import com.sldroid.mecdic_v21.R;
+import com.sldroid.mecdic_v21.ResultActivity;
 import com.sldroid.mecdic_v21.dbms.TestAdapter;
 import com.sldroid.mecdic_v21.extra.Word;
 import java.util.ArrayList;
@@ -32,7 +34,7 @@ public class SiFragment extends Fragment {
 
     private TestAdapter dbHelper;
     private ListView listView;
-    private ArrayList<Word> words;
+    private ArrayList<Word> words, wordCopy;
     private WordAdapter wordAdapter;
 
     public SiFragment() {
@@ -63,7 +65,8 @@ public class SiFragment extends Fragment {
         listView.setEmptyView(btnSubmitEng);
 
         /*words = dbHelper.getAllWordToArray("siDic");
-        wordAdapter = new WordAdapter(getContext(),words);
+        wordCopy = words;
+        wordAdapter = new WordAdapter(getContext(),wordCopy);
         listView.setAdapter(wordAdapter);*/
 
         new GetAllWords().execute();
@@ -72,18 +75,23 @@ public class SiFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
+                Intent intent = new Intent(getActivity(), ResultActivity.class);
+                intent.putExtra("fName", "si");
+                intent.putExtra("id", wordCopy.get(position).get_id());
+                intent.putExtra("word", wordCopy.get(position).getWord());
+                intent.putExtra("definition", wordCopy.get(position).getDefinition());
+                intent.putExtra("favourite", wordCopy.get(position).getFavourite());
+                startActivity(intent);
+                /*
+                * used android:launchMode="singleTask"  in AndroidManifest
+                * to achieve fast BackNavigation between two activity
+                */
             }
         });
     }
 
     public void textSearch(String inputTxt){
         new SearchTask().execute(inputTxt);
-    }
-
-    public void resetSearch(){
-        wordAdapter = new WordAdapter(getContext(), words);
-        listView.setAdapter(wordAdapter);
-        wordAdapter.notifyDataSetChanged();
     }
 
     public class SearchTask extends AsyncTask<String, Void, ArrayList<Word>>{
@@ -104,8 +112,9 @@ public class SiFragment extends Fragment {
 
         @Override
         protected void onPostExecute(ArrayList<Word> word_List) {
-            super.onPostExecute(words);
-            wordAdapter = new WordAdapter(getContext(), word_List);
+            super.onPostExecute(word_List);
+            wordCopy = word_List;
+            wordAdapter = new WordAdapter(getContext(), wordCopy);
             listView.setAdapter(wordAdapter);
             wordAdapter.notifyDataSetChanged();
         }
@@ -153,10 +162,12 @@ public class SiFragment extends Fragment {
                 viewHolder = new ViewHolder();
                 LayoutInflater inflater = LayoutInflater.from(getContext());
                 convertView = inflater.inflate(R.layout.si_word_row, parent, false);
+
                 viewHolder.txtID = (TextView) convertView.findViewById(R.id.txt_id);
                 viewHolder.txtWord = (TextView) convertView.findViewById(R.id.txt_word);
                 viewHolder.txtDef = (TextView) convertView.findViewById(R.id.txt_def);
                 viewHolder.imgFav = (ImageButton) convertView.findViewById(R.id.img_fav);
+
                 // Cache the viewHolder object inside the fresh view
                 convertView.setTag(viewHolder);
             } else {
@@ -228,10 +239,14 @@ public class SiFragment extends Fragment {
         @Override
         protected void onPostExecute(ArrayList<Word> result) {
             super.onPostExecute(result);
+            wordCopy = result;
             words = result;
-            wordAdapter =  new WordAdapter(getContext(), result);
+            wordAdapter =  new WordAdapter(getContext(), wordCopy);
             listView.setAdapter(wordAdapter);
         }
     }
 
+    public void update(){
+        new GetAllWords().execute();
+    }
 }

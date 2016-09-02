@@ -120,7 +120,7 @@ public class TestAdapter
 
         ContentValues cv = new ContentValues();
         cv.put("favourite", num);
-
+        Log.i("favUpdate ", id + " " + String.valueOf(num));
         mDb.update(table, cv, "_id="+id, null);
     }
 
