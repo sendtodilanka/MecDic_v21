@@ -5,6 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
+    android:background="#fff3f3f3"
     tools:context="com.sldroid.mecdic_v21.ResultActivity">
 
     <android.support.design.widget.AppBarLayout

@@ -3,11 +3,10 @@ package com.sldroid.mecdic_v21;
 import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -21,13 +20,10 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.sldroid.mecdic_v21.dbms.TestAdapter;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 
 public class ResultActivity extends AppCompatActivity implements View.OnClickListener{
@@ -58,7 +54,6 @@ public class ResultActivity extends AppCompatActivity implements View.OnClickLis
         id = intent.getStringExtra("id");
         word = intent.getStringExtra("word");
         String definition = intent.getStringExtra("definition");
-        String favourite = intent.getStringExtra("favourite");
 
         TextView resultWord = (TextView)findViewById(R.id.resultWord);
         Button btnCopy = (Button)findViewById(R.id.btnCopy);
@@ -72,10 +67,7 @@ public class ResultActivity extends AppCompatActivity implements View.OnClickLis
         btnShare.setOnClickListener(this);
         imgFavResult.setOnClickListener(this);
 
-        if (favourite.equalsIgnoreCase("1"))
-            imgFavResult.setImageResource(R.drawable.fav_on);
-        else
-            imgFavResult.setImageResource(R.drawable.fav_off);
+        new SetFavourite().execute();
 
         resultWord.setTextSize(20);
 
@@ -97,6 +89,28 @@ public class ResultActivity extends AppCompatActivity implements View.OnClickLis
         recyclerView.setLayoutManager(linearLayoutManager);
     }
 
+    public class SetFavourite extends AsyncTask<String, Void, Boolean>{
+
+        @Override
+        protected Boolean doInBackground(String... params) {
+            String table;
+            if (fName.equalsIgnoreCase("si"))
+                table = "siDic";
+            else
+                table = "enDic";
+            return dbHelper.isFavourite(table, id);
+        }
+
+        @Override
+        protected void onPostExecute(Boolean aBoolean) {
+            super.onPostExecute(aBoolean);
+            if (aBoolean)
+                imgFavResult.setImageResource(R.drawable.fav_on);
+            else
+                imgFavResult.setImageResource(R.drawable.fav_off);
+        }
+    }
+
     @Override
     public void onClick(View v) {
         switch (v.getId()){
@@ -112,7 +126,7 @@ public class ResultActivity extends AppCompatActivity implements View.OnClickLis
                 Intent share = new Intent(Intent.ACTION_SEND);
                 share.setType("text/plain");
                 share.putExtra(Intent.EXTRA_TEXT, word);
-                startActivity(Intent.createChooser(share, "Share Text"));
+                startActivity(Intent.createChooser(share, "Share Word"));
                 break;
             case  R.id.imgfavResult:
                 if (dbHelper.isFavourite("enDic", id)){
@@ -122,10 +136,6 @@ public class ResultActivity extends AppCompatActivity implements View.OnClickLis
                 else{
                     imgFavResult.setImageResource(R.drawable.fav_on);
                     dbHelper.favUpdate("enDic", id,1);
-                }
-                if (fName.equalsIgnoreCase("si")){
-                    MainActivity activity = new MainActivity();
-                    activity.callMainActivity(true);
                 }
                 break;
         }
@@ -207,10 +217,10 @@ public class ResultActivity extends AppCompatActivity implements View.OnClickLis
     // copy text to clipboard
     private void setClipboard(Context context, String text) {
         if(android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.HONEYCOMB) {
-            android.text.ClipboardManager clipboard = (android.text.ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
+            android.text.ClipboardManager clipboard = (android.text.ClipboardManager)getSystemService(context.CLIPBOARD_SERVICE);
             clipboard.setText(text);
         } else {
-            android.content.ClipboardManager clipboard = (android.content.ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
+            android.content.ClipboardManager clipboard = (android.content.ClipboardManager)getSystemService(context.CLIPBOARD_SERVICE);
             android.content.ClipData clip = android.content.ClipData.newPlainText("Copied Text", text);
             clipboard.setPrimaryClip(clip);
         }
@@ -218,36 +228,43 @@ public class ResultActivity extends AppCompatActivity implements View.OnClickLis
 
     public void textToSpeech(final String s){
 
-        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        int currentVolume = am.getStreamVolume(AudioManager.STREAM_MUSIC);
-        am.setStreamVolume(AudioManager.STREAM_MUSIC,am.getStreamMaxVolume(AudioManager.STREAM_MUSIC),0);
+        try {
+            AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+            am.setStreamVolume(AudioManager.STREAM_MUSIC,am.getStreamMaxVolume(AudioManager.STREAM_MUSIC),0);
 
-        tts=new TextToSpeech(ResultActivity.this, new TextToSpeech.OnInitListener() {
+            tts=new TextToSpeech(ResultActivity.this, new TextToSpeech.OnInitListener() {
 
-            @Override
-            public void onInit(int status) {
-                if(status == TextToSpeech.SUCCESS){
-                    int result=tts.setLanguage(Locale.US);
-                    if(result==TextToSpeech.LANG_MISSING_DATA ||
-                            result==TextToSpeech.LANG_NOT_SUPPORTED){
-                        Log.e("error", "This Language is not supported");
-                    }
-                    else{
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                            String utteranceId=this.hashCode() + "";
-                            tts.speak(s, TextToSpeech.QUEUE_FLUSH, null, utteranceId);
-                        } else {
-                            @SuppressWarnings("deprecation")
-                            HashMap<String, String> map = new HashMap<>();
-                            map.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "MessageId");
-                            tts.speak(s, TextToSpeech.QUEUE_FLUSH, map);
+                @Override
+                public void onInit(int status) {
+                    if(status == TextToSpeech.SUCCESS){
+                        int result=tts.setLanguage(Locale.US);
+                        if(result==TextToSpeech.LANG_MISSING_DATA ||
+                                result==TextToSpeech.LANG_NOT_SUPPORTED){
+                            Log.e("error", "This Language is not supported");
+                        }
+                        else{
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                String utteranceId=this.hashCode() + "";
+                                tts.speak(s, TextToSpeech.QUEUE_FLUSH, null, utteranceId);
+                            } else {
+                                @SuppressWarnings("deprecation")
+                                HashMap<String, String> map = new HashMap<>();
+                                map.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "MessageId");
+                                tts.speak(s, TextToSpeech.QUEUE_FLUSH, map);
+                            }
                         }
                     }
+                    else
+                        Log.e("error", "Initialization Failed!");
                 }
-                else
-                    Log.e("error", "Initialization Failed!");
-            }
-        });
+            });
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(
+                    getApplicationContext(),
+                    "Can't start TTS at this moment",
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override

@@ -35,7 +35,9 @@ import com.mikepenz.materialdrawer.model.SectionDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 import com.sldroid.mecdic_v21.fragment.EnFragment;
+import com.sldroid.mecdic_v21.fragment.EngFragment;
 import com.sldroid.mecdic_v21.fragment.SiFragment;
+import com.sldroid.mecdic_v21.fragment.SinFragment;
 import com.sldroid.mecdic_v21.pageAdapter.DicPagerAdapter;
 
 public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener{
@@ -79,8 +81,8 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
         dicPagerAdapter = new DicPagerAdapter(getSupportFragmentManager());
-        dicPagerAdapter.addFragment(new EnFragment(), "English");
-        dicPagerAdapter.addFragment(new SiFragment(), "සිංහල");
+        dicPagerAdapter.addFragment(new EngFragment(), "English");
+        dicPagerAdapter.addFragment(new SinFragment(), "සිංහල");
 
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
@@ -245,31 +247,20 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
     public boolean onQueryTextChange(String newText) {
         if(mViewPager.getCurrentItem() == 0) //First fragment
         {
-            EnFragment engFragment = (EnFragment)mViewPager.getAdapter()
-                    .instantiateItem(mViewPager, mViewPager.getCurrentItem());
-            engFragment.textSearch(newText.replace(" ",""));
+            EngFragment fragment = (EngFragment)mViewPager.getAdapter()
+                    .instantiateItem(mViewPager,mViewPager.getCurrentItem());
+            fragment.textSearch(newText.replace(" ",""));
+
             editor.putString("enSearch", newText.replace(" ","")).apply();
         }
         else if(mViewPager.getCurrentItem() == 1) //First fragment
         {
-            SiFragment sinFragment = (SiFragment) mViewPager.getAdapter()
+            SinFragment sinFragment = (SinFragment) mViewPager.getAdapter()
                     .instantiateItem(mViewPager, mViewPager.getCurrentItem());
             sinFragment.textSearch(newText.replace(" ",""));
+
             editor.putString("siSearch", newText.replace(" ","")).apply();
         }
         return false;
-    }
-
-    public void callMainActivity(Boolean val){
-        if (val){
-            SiFragment sinFragment = (SiFragment) mViewPager.getAdapter()
-                    .instantiateItem(mViewPager, mViewPager.getCurrentItem());
-            sinFragment.update();
-        }
-        else {
-            EnFragment engFragment = (EnFragment)mViewPager.getAdapter()
-                    .instantiateItem(mViewPager, mViewPager.getCurrentItem());
-            engFragment.update();
-        }
     }
 }

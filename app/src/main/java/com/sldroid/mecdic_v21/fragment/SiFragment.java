@@ -245,8 +245,4 @@ public class SiFragment extends Fragment {
             listView.setAdapter(wordAdapter);
         }
     }
-
-    public void update(){
-        new GetAllWords().execute();
-    }
 }
